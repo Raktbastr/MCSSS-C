@@ -15,11 +15,14 @@
 
 // Downloads plugins on Macos/Linux
 void downloadFileUnix(const char *url) {
-    char command[MAX_URL_LENGTH + 50]; 
-    snprintf(command, sizeof(command), "cd ~/Documents/MinecraftServer/plugins/ && curl -O '%s'", url);
+    const char *username = getenv("SUDO_USER");
+    struct passwd *pw = getpwnam(username);
+    const char *homeDir = pw->pw_dir;
+    char command[MAX_URL_LENGTH + 100]; 
+    snprintf(command, sizeof(command), "cd %s/Documents/MinecraftServer/plugins/ && curl -O '%s'", homeDir, url);
     system(command);
 }
-// Down`loads plugins on Windows
+// Downloads plugins on Windows
 void downloadFileWindows(const char *url) {
     char command[MAX_URL_LENGTH + 50]; 
     snprintf(command, sizeof(command), "cd C:\\MinecraftServer\\plugins && curl -O '%s'", url);
@@ -76,7 +79,7 @@ int main(int argc, char *argv[]) {
             printf("Minecraft Server Startup Script version 1.0\n");
             return 0;
         } else if (strcmp(argv[1], "-s") == 0 || strcmp(argv[1], "--suggestions") == 0) {
-            printf("If you are running this server under a MacOS or Linux machine it is reccomended to install tmux or screen.\n");
+            printf("\nIf you are running this server under a MacOS or Linux machine it is reccomended to install tmux or screen.\n");
             printf("It will allow you to detach from the terminal without closing running apps.\n");
             printf("If you plan on remotely starting and or managing this server via SSH, tmux/screen is virtually a requirement.\n\n");
             printf("If you are going to make another server with this script, make sure to change the server port in the server.properties file and rename the server folder.\n\n");
@@ -132,14 +135,19 @@ int main(int argc, char *argv[]) {
         osType = 3;
         printf("Server directory will be created in your 'Documents' folder\n\n");
         waitForSeconds(2);
-        system("mkdir -p ~/Documents/MinecraftServer/plugins");
+        const char *username = getenv("SUDO_USER");
+        struct passwd *pw = getpwnam(username);
+        const char *homeDir = pw->pw_dir;
+        char command[256];
+        snprintf(command, sizeof(command), "mkdir -p %s/Documents/MinecraftServer/plugins", homeDir);
+        system(command);
         printf("Would you like to install the necessary software? (1 for yes, 0 for no) ");
         scanf("%d", &installConsent);
         // Install necessary software with package manager, exits if you are not running with sudo
         if (installConsent == 1) {
             printf("Installing necessary software...\n");
             if (geteuid() != 0) {
-                printf("To download necessarry software please run with sudo.\n");
+                printf("To download necessary software please run with sudo.\n");
                 exit(EXIT_FAILURE);
             }
             const char* packageManager = detectPackageManager();
@@ -183,11 +191,16 @@ int main(int argc, char *argv[]) {
         case 1:
             printf("Downloading 1.21.4 server jar.\n");
             waitForSeconds(2);
-            system("curl -o ~/Documents/MinecraftServer/server.jar 'https://piston-data.mojang.com/v1/objects/4707d00eb834b446575d89a61a11b5d548d8c001/server.jar'");
-            system("curl -o ~/Documents/MinecraftServer/start.bat 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/start.bat'");
-            system("curl -o ~/Documents/MinecraftServer/start.sh 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/start.sh'");
-            system("curl -o ~/Documents/MinecraftServer/start-nogui.bat 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/start-nogui.bat'");
-            system("curl -o ~/Documents/MinecraftServer/start-nogui.sh 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/start-nogui.sh'");
+            snprintf(command, sizeof(command), "curl -o %s/Documents/MinecraftServer/server.jar 'https://piston-data.mojang.com/v1/objects/4707d00eb834b446575d89a61a11b5d548d8c001/server.jar'", homeDir);
+            system(command);
+            snprintf(command, sizeof(command), "curl -o %s/Documents/MinecraftServer/start.bat 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/start.bat'", homeDir);
+            system(command);
+            snprintf(command, sizeof(command), "curl -o %s/Documents/MinecraftServer/start.sh 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/start.sh'", homeDir);
+            system(command);
+            snprintf(command, sizeof(command), "curl -o %s/Documents/MinecraftServer/start-nogui.bat 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/start-nogui.bat'", homeDir);
+            system(command);
+            snprintf(command, sizeof(command), "curl -o %s/Documents/MinecraftServer/start-nogui.sh 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/start-nogui.sh'", homeDir);
+            system(command);
 
             waitForSeconds(2);
             printf("Which server gamemode?\n");
@@ -200,10 +213,12 @@ int main(int argc, char *argv[]) {
             // Downloads the server.properties file based on the gamemode
             if (gamemode == 1) {
                 waitForSeconds(2);
-                system("curl -o ~/Documents/MinecraftServer/server.properties 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/survivalserver.properties'");
+                snprintf(command, sizeof(command), "curl -o %s/Documents/MinecraftServer/server.properties 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/survivalserver.properties'", homeDir);
+                system(command);
             } else if (gamemode == 2) {
                 waitForSeconds(2);
-                system("curl -o ~/Documents/MinecraftServer/server.properties 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/creativeserver.properties'");
+                snprintf(command, sizeof(command), "curl -o %s/Documents/MinecraftServer/server.properties 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/creativeserver.properties'", homeDir);
+                system(command);
             } else {
                 printf("Please input a valid number.\n");
                 goto switch2;
@@ -213,11 +228,16 @@ int main(int argc, char *argv[]) {
         case 2:
             printf("Downloading 1.21.4 Paper server jar.\n");
             waitForSeconds(2);
-            system("curl -o ~/Documents/MinecraftServer/server.jar 'https://api.papermc.io/v2/projects/paper/versions/1.21.4/builds/4/downloads/paper-1.21.4-4.jar'");
-            system("curl -o ~/Documents/MinecraftServer/start.bat 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/start.bat'");
-            system("curl -o ~/Documents/MinecraftServer/start.sh 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/start.sh'");
-            system("curl -o ~/Documents/MinecraftServer/start-nogui.bat 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/start-nogui.bat'");
-            system("curl -o ~/Documents/MinecraftServer/start-nogui.sh 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/start-nogui.sh'");
+            snprintf(command, sizeof(command), "curl -o %s/Documents/MinecraftServer/server.jar 'https://api.papermc.io/v2/projects/paper/versions/1.21.4/builds/4/downloads/paper-1.21.4-4.jar'", homeDir);
+            system(command);
+            snprintf(command, sizeof(command), "curl -o %s/Documents/MinecraftServer/start.bat 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/start.bat'", homeDir);
+            system(command);
+            snprintf(command, sizeof(command), "curl -o %s/Documents/MinecraftServer/start.sh 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/start.sh'", homeDir);
+            system(command);
+            snprintf(command, sizeof(command), "curl -o %s/Documents/MinecraftServer/start-nogui.bat 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/start-nogui.bat'", homeDir);
+            system(command);
+            snprintf(command, sizeof(command), "curl -o %s/Documents/MinecraftServer/start-nogui.sh 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/start-nogui.sh'", homeDir);
+            system(command);
 
             waitForSeconds(2);
             printf("Which server gamemode?\n");
@@ -230,23 +250,24 @@ int main(int argc, char *argv[]) {
             // Downloads the server.properties file based on the gamemode
             if (gamemode == 1) {
                 waitForSeconds(2);
-                system("curl -o ~/Documents/MinecraftServer/server.properties 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/papersurvivalserver.properties'");
+                snprintf(command, sizeof(command), "curl -o %s/Documents/MinecraftServer/server.properties 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/papersurvivalserver.properties'", homeDir);
+                system(command);
             } else if (gamemode == 2) {
                 waitForSeconds(2);
-                system("curl -o ~/Documents/MinecraftServer/server.properties 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/papercreativeserver.properties'");
+                snprintf(command, sizeof(command), "curl -o %s/Documents/MinecraftServer/server.properties 'https://raw.githubusercontent.com/Raktbastr/MCSSS-C/refs/heads/main/papercreativeserver.properties'", homeDir);
+                system(command);
             } else {
                 printf("Please input a valid number.\n");
                 goto switch3;
             }
             // Downloads plugins if wanted
             int pluginAmt;
-            char input[10];
             waitForSeconds(2);
             pluginGoto1:
             printf("How many plugins would you like to add? ");
-            fgets(input, sizeof(input), stdin);
-            if (sscanf(input, "%d", &pluginAmt) != 1 || pluginAmt < 0) {
+            if (scanf("%d", &pluginAmt) != 1 || pluginAmt < 0) {
                 printf("Please input a valid number.\n");
+                while (getchar() != '\n'); // Clear the input buffer
                 goto pluginGoto1;
             }
             for (int i = 0; i < pluginAmt; i++ ) {
@@ -254,12 +275,8 @@ int main(int argc, char *argv[]) {
 
                 printf("Enter the URL to download plugin \n");
                 printf("Make sure the URL ends with a filename (e.g. 'https://example.com/plugin.jar'): ");
-                fgets(url, sizeof(url), stdin);
+                scanf("%s", url);
 
-                size_t len = strlen(url);
-                if (len > 0 && url[len - 1] == '\n') {
-                    url[len - 1] = '\0';
-                }
                 waitForSeconds(2);
                 downloadFileUnix(url);
             }
@@ -348,13 +365,12 @@ int main(int argc, char *argv[]) {
 
             // Downloads plugins if wanted
             int pluginAmt;
-            char input[10];
             waitForSeconds(2);
             pluginGoto2:
             printf("How many plugins would you like to add? \n");
-            fgets(input, sizeof(input), stdin);
-            if (sscanf(input, "%d", &pluginAmt) != 1 || pluginAmt < 0) {
+            if (scanf("%d", &pluginAmt) != 1 || pluginAmt < 0) {
                 printf("Please input a valid number.\n");
+                while (getchar() != '\n'); // Clear the input buffer
                 goto pluginGoto2;
             }
             for (int i = 0; i < pluginAmt; i++ ) {
@@ -362,12 +378,8 @@ int main(int argc, char *argv[]) {
 
                 printf("Enter the URL to download plugin \n");
                 printf("Make sure the URL ends with a filename (e.g. 'https://example.com/plugin.jar'): ");
-                fgets(url, sizeof(url), stdin);
+                scanf("%s", url);
 
-                size_t len = strlen(url);
-                if (len > 0 && url[len - 1] == '\n') {
-                    url[len - 1] = '\0';
-                }
                 waitForSeconds(2);
                 downloadFileWindows(url);
             }
@@ -382,11 +394,12 @@ int main(int argc, char *argv[]) {
 
     // Finish server setup!
     waitForSeconds(2);
-    printf("Making and accpeting EULA file\n");
+    printf("Making and accepting EULA file\n");
     if (osType == 1) {
         createEulaFileWindows();
     } else {
-        system("echo 'eula=true' > ~/Documents/MinecraftServer/eula.txt");
+        snprintf(command, sizeof(command), "echo 'eula=true' > %s/Documents/MinecraftServer/eula.txt", homeDir);
+        system(command);
         // Get the username of the user running the script
         const char *username = getenv("SUDO_USER");
         if (username == NULL) {
@@ -401,15 +414,16 @@ int main(int argc, char *argv[]) {
                 gid_t gid = pw->pw_gid;
 
                 // Change ownership recursively
-                if (chown("/Users/raktbastr/Documents/MinecraftServer", uid, gid) == -1) {
+                snprintf(command, sizeof(command), "%s/Documents/MinecraftServer", homeDir);
+                if (chown(command, uid, gid) == -1) {
                     perror("Failed to change ownership of the server directory. Please run 'sudo chown -R <username> ~/Documents/MinecraftServer'");
                 }
             } else {
                 perror("Failed to change ownership of the server directory. Please run 'sudo chown -R <username> ~/Documents/MinecraftServer");
             }
-    } else {
-        perror("Failed to change ownership of the server directory. Please run 'sudo chown -R <username> ~/Documents/MinecraftServer");
-    }
+        } else {
+            perror("Failed to change ownership of the server directory. Please run 'sudo chown -R <username> ~/Documents/MinecraftServer");
+        }
     }
 
     waitForSeconds(2);
