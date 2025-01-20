@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #endif
+#include <_stdio.h>
 
 #define MAX_URL_LENGTH 2048
 
