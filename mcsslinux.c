@@ -5,14 +5,20 @@
 #include <pwd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <_stdio.h>
 
 #define MAX_URL_LENGTH 2048
 
 // Downloads plugins on Macos/Linux
 void downloadFile(const char *url) {
     const char *username = getenv("SUDO_USER");
+    if (username == NULL) {
+        username = getenv("USER");
+    }
     struct passwd *pw = getpwnam(username);
+    if (pw == NULL) {
+        perror("Failed to get user information");
+        exit(EXIT_FAILURE);
+    }
     const char *homeDir = pw->pw_dir;
     char command[MAX_URL_LENGTH + 100]; 
     snprintf(command, sizeof(command), "cd %s/Documents/MinecraftServer/plugins/ && curl -O '%s'", homeDir, url);
@@ -80,7 +86,14 @@ int main(int argc, char *argv[]) {
         printf("Server directory will be created in your 'Documents' folder\n\n");
         waitForSeconds(2);
         const char *username = getenv("SUDO_USER");
+        if (username == NULL) {
+            username = getenv("USER");
+        }
         struct passwd *pw = getpwnam(username);
+        if (pw == NULL) {
+            perror("Failed to get user information");
+            exit(EXIT_FAILURE);
+        }
         const char *homeDir = pw->pw_dir;
         char command[256];
         snprintf(command, sizeof(command), "mkdir -p %s/Documents/MinecraftServer/plugins", homeDir);
@@ -232,13 +245,13 @@ int main(int argc, char *argv[]) {
     snprintf(command, sizeof(command), "echo 'eula=true' > %s/Documents/MinecraftServer/eula.txt", homeDir);
     system(command);
     // Get the username of the user running the script
-    const char *username = getenv("SUDO_USER");
-    if (username == NULL) {
-        username = getenv("USER");
+    const char *username2 = getenv("SUDO_USER");
+    if (username2 == NULL) {
+        username2 = getenv("USER");
     }
-    if (username != NULL) {
+    if (username2 != NULL) {
         // Get the user ID and group ID of the user
-        struct passwd *pw = getpwnam(username);
+        struct passwd *pw = getpwnam(username2);
         if (pw != NULL) {
             uid_t uid = pw->pw_uid;
             gid_t gid = pw->pw_gid;
